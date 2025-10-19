@@ -1,6 +1,6 @@
 credentials.json
 token.json
-
+.idea
 
 venv/
 env/
