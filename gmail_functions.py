@@ -45,7 +45,7 @@ def get_gmail_service():
         return None
 
 
-def get_unread_emails(max_results = 10) -> object:
+def get_unread_emails(max_results = 10):
     """
     Fetches unread emails from Gmail inbox.
 
@@ -186,4 +186,81 @@ def mark_email_as_read(message_id):
         return False
 
 
+def read_email(identifier: str) :
+    """
+    Reads an email by position number, email ID, sender name, or subject keyword.
 
+    Use this when user wants to read a specific email. Works with:
+    - Position: "Read email 1", "Show me the third email" → identifier="1" or "3"
+    - Sender: "Read email from boss" → identifier="boss"
+    - Subject: "Read the Q4 report email" → identifier="Q4 report"
+    - Email ID: Direct Gmail message ID → identifier="18c2f3a5..."
+
+    Args:
+        identifier: Position number (1, 2, 3...), sender name, subject keyword, or email ID
+
+    Returns:
+        Full email content
+    """
+    service = get_gmail_service()
+
+    if not service:
+        return None
+
+    try:
+        # Get unread emails
+        emails = get_unread_emails(max_results=10)
+
+        if not emails:
+            return "No unread emails found."
+
+        matching_email = None
+
+        # Strategy 1: Try as position number
+        try:
+            position = int(identifier)
+            if 1 <= position <= len(emails):
+                matching_email = emails[position - 1]
+        except ValueError:
+            pass
+
+        # Strategy 2: Try as email ID (exact match)
+        if not matching_email:
+            for email in emails:
+                if email['id'] == identifier:
+                    matching_email = email
+                    break
+
+        # Strategy 3: Try as sender/subject search
+        if not matching_email:
+            identifier_lower = identifier.lower()
+            for email in emails:
+                sender = email['sender'].lower()
+                subject = email['subject'].lower()
+
+                if identifier_lower in sender or identifier_lower in subject:
+                    matching_email = email
+                    break
+
+        # No match found
+        if not matching_email:
+            return f"No email found matching '{identifier}'. Try using position (1, 2, 3...) or keywords from sender/subject."
+
+        # Get full body
+        email_id = matching_email['id']
+        body = get_email_body(email_id)
+
+        # Format response
+        result = f" Email Details :\n"
+        result += f"From: {matching_email['sender']}\n"
+        result += f"Subject: {matching_email['subject']}\n"
+        result += f"Date: {matching_email.get('date', 'Unknown')}\n"
+        result += f"Email ID: {email_id}\n"
+        result += f"\n{'=' * 50}\n"
+        result += f"CONTENT:\n{body}\n"
+        result += f"{'=' * 50}"
+
+        return result
+
+    except Exception as e:
+        return f"Error reading email: {str(e)}"

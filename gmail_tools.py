@@ -5,7 +5,7 @@ Each tool wraps a Gmail function and formats output for the agent.
 """
 
 from langchain.tools import tool
-from gmail_functions import get_unread_emails, get_email_body, mark_email_as_read
+from gmail_functions import get_unread_emails, read_email, mark_email_as_read
 
 @tool()
 def get_unread_mail_tool(max_results :int =10):
@@ -29,9 +29,9 @@ def get_unread_mail_tool(max_results :int =10):
         if max_results < 1:
             return "Error: max_results must be at least 1"
 
-        if max_results > 20:
-            max_results = 20
-            print("Limiting to 20 emails")
+        if max_results > 10:
+            max_results = 10
+            print("Limiting to 10 emails")
 
         emails = get_unread_emails(max_results)
         if not emails :
@@ -51,30 +51,26 @@ def get_unread_mail_tool(max_results :int =10):
 
 
 @tool()
-def get_email_body_tool(message_id: str):
+def read_email_tool(identifier: str):
     """
-    Gets the full body content of a specific email.
+    Reads an email by position number, email ID, sender name, or subject keyword.
 
-    Use this tool when the user wants to:
-    - Read the full content of an email
-    - See the complete message (not just preview)
-    - Get details about a specific email
-
+    Use this when user wants to read a specific email. Works with:
     Args:
-        message_id: The Gmail message ID (obtained from get_unread_emails_tool)
+        identifier: The Gmail position or message ID or sender/subject
 
     Returns:
         The full text content of the email
     """
     try:
-        if not message_id:
-            return "Error: message_id must be provided"
+        if not identifier:
+            return "Error: an identifier must be provided"
         else:
-            body = get_email_body(message_id)
+            body = read_email(identifier)
             if not body:
-                return f"Error: couldn't retrieve body of email ID:  {message_id}"
+                return f"Error: couldn't retrieve body of identifier :  {identifier}"
             else:
-                return f"email body: \n\n{body}"
+                return body
 
     except Exception as e:
         return "Error reading email : " + str(e)
@@ -109,4 +105,4 @@ def mark_email_as_read_tool(message_id: str):
     except Exception as e:
         return "Error marking email as read : " + str(e)
 
-gmail_tools =[get_unread_mail_tool, get_email_body_tool, mark_email_as_read_tool]
+gmail_tools =[get_unread_mail_tool, read_email_tool, mark_email_as_read_tool]
