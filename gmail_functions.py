@@ -1,5 +1,3 @@
-from langchain.tools import tool
-import requests
 import os.path
 import base64
 from google.auth.transport.requests import Request
@@ -47,7 +45,7 @@ def get_gmail_service():
         return None
 
 
-def get_unread_emails(max_results=10):
+def get_unread_emails(max_results = 10) -> object:
     """
     Fetches unread emails from Gmail inbox.
 
@@ -186,4 +184,6 @@ def mark_email_as_read(message_id):
     except HttpError as error:
         print(f'An error occurred: {error}')
         return False
+
+
 
