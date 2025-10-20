@@ -5,7 +5,7 @@ Each tool wraps a Gmail function and formats output for the agent.
 """
 
 from langchain.tools import tool
-from gmail_functions import get_unread_emails, read_email, mark_email_as_read, get_email_body
+from gmail_functions import get_unread_emails, read_email, mark_email_as_read, mark_email_as_unread, get_email_body,get_email_from_sender
 
 @tool()
 def get_unread_mail_tool(max_results :int =10):
@@ -105,4 +105,94 @@ def mark_email_as_read_tool(message_id: str):
     except Exception as e:
         return "Error marking email as read : " + str(e)
 
-gmail_tools =[get_unread_mail_tool, read_email_tool, mark_email_as_read_tool]
+
+@tool()
+def mark_email_as_unread_tool(message_id: str):
+    """
+    Marks an email as unread in Gmail.
+    Use this tool when the user wants to:
+    - Mark an email as unread
+    - Mark as unseen
+    - Add the unread status
+    - Clear the unread indicator
+
+    Args
+        message_id: The Gmail message ID to mark as unread
+    Returns:
+        Confirmation message indicating success or failure
+    """
+
+    try :
+        if not message_id:
+            return "Error: message_id must be provided"
+        else:
+            result=mark_email_as_unread(message_id)
+            if not result:
+                return "Error: couldn't mark email as unread."
+            else:
+                return f"Email has been marked as unread."
+    except Exception as e:
+        return "Error marking email as unread : " + str(e)
+
+
+@tool()
+def get_email_from_sender_tool(sender: str= None,max_results :int=2):
+    """
+    Reads an email by sender name
+
+    Use this when user wants to read emails from a specific sender .
+    Args:
+        sender: Sender name
+        max_results: Maximum number of emails to return
+
+    Returns:
+        Full email content
+    """
+    try:
+        if not sender:
+            return "Error: sender must be provided"
+        else:
+            emails=get_email_from_sender(sender,max_results)
+            if not emails:
+                return "Error: couldn't get email from sender."
+            else:
+                result=f""
+                for i,email in enumerate(emails, 1):
+                    result += f"{i}: \n"
+                    result += f"From: {email['sender']}\n"
+                    result += f"Subject: {email['subject']}\n"
+                    result += f"Date: {email['date']}\n"
+                    result += f"Email ID: {email['id']}\n"
+                    result += f"\n{'=' * 50}\n"
+                    result += f"CONTENT:\n{email['snippet']}\n"
+                    result += f"{'=' * 50}"
+
+                return result
+    except Exception as e:
+        return "Error getting email : " + str(e)
+
+@tool()
+def get_email_body_tool(message_id: str=None):
+    """
+    Gets the full body of an email by its ID.
+
+    Args:
+        message_id: The Gmail message ID
+
+    Returns:
+        String containing the email body
+    """
+    try:
+        if not message_id:
+            return "Error: message_id must be provided"
+        else:
+            body = get_email_body(message_id)
+            if not body:
+                return "Error: couldn't get email body."
+            else:
+                return body
+    except Exception as e:
+        return "Error getting email : " + str(e)
+
+
+gmail_tools =[get_unread_mail_tool, read_email_tool, get_email_body_tool, mark_email_as_read_tool, mark_email_as_unread_tool, get_email_from_sender_tool]

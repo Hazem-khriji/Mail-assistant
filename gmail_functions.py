@@ -298,11 +298,11 @@ def mark_email_as_unread(message_id):
 
 def get_email_from_sender(sender:str = None,max_results: int=1):
     """
-    Reads an email by position number, email ID, sender name, or subject keyword.
+    Reads emails by  sender name
 
-    Use this when user wants to read a specific email from a specific sender .
+    Use this when user wants to read emails from a specific sender .
     Args:
-        sender: Position number (1, 2, 3...), sender name, subject keyword, or email ID
+        sender: Sender name,
         max_results: Maximum number of emails to return
 
     Returns:
