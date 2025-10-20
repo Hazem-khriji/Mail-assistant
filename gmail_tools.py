@@ -5,7 +5,7 @@ Each tool wraps a Gmail function and formats output for the agent.
 """
 
 from langchain.tools import tool
-from gmail_functions import get_unread_emails, read_email, mark_email_as_read
+from gmail_functions import get_unread_emails, read_email, mark_email_as_read, get_email_body
 
 @tool()
 def get_unread_mail_tool(max_results :int =10):
@@ -29,9 +29,9 @@ def get_unread_mail_tool(max_results :int =10):
         if max_results < 1:
             return "Error: max_results must be at least 1"
 
-        if max_results > 10:
-            max_results = 10
-            print("Limiting to 10 emails")
+        if max_results > 20:
+            max_results = 20
+            print("Limiting to 20 emails")
 
         emails = get_unread_emails(max_results)
         if not emails :

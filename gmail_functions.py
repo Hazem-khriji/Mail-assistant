@@ -264,3 +264,106 @@ def read_email(identifier: str) :
 
     except Exception as e:
         return f"Error reading email: {str(e)}"
+
+
+def mark_email_as_unread(message_id):
+    """
+    Marks an email as unread.
+
+    Args:
+        message_id: The Gmail message ID
+
+    Returns:
+        True if successful, False otherwise
+    """
+    service = get_gmail_service()
+
+    if not service:
+        return False
+
+    try:
+        service.users().messages().modify(
+            userId='me',
+            id=message_id,
+            body={'addLabelIds': ['UNREAD']}
+        ).execute()
+
+        print(f'Email {message_id} marked as unread.')
+        return True
+
+    except HttpError as error:
+        print(f'An error occurred: {error}')
+        return False
+
+
+def get_email_from_sender(sender:str = None,max_results: int=1):
+    """
+    Reads an email by position number, email ID, sender name, or subject keyword.
+
+    Use this when user wants to read a specific email from a specific sender .
+    Args:
+        sender: Position number (1, 2, 3...), sender name, subject keyword, or email ID
+        max_results: Maximum number of emails to return
+
+    Returns:
+        Full email content
+    """
+    service = get_gmail_service()
+    if not service:
+        return []
+    try:
+        query = f"from:{sender}"
+        messages= service.users().messages().list(
+            userId='me',
+            q=query,
+            maxResults=max_results
+        ).execute()
+
+        messages= messages.get('messages',[])
+        if not messages:
+            print(f"No messages found from {sender}.")
+            return []
+
+        emails=[]
+
+        for message in messages:
+            msg=service.users().messages().get(
+                userId='me',
+                id=message['id'],
+                format= 'full'
+            ).execute()
+            headers = msg['payload']['headers']
+            subject = next((h['value'] for h in headers if h['name'] == 'Subject'), 'No Subject')
+            sender_header = next((h['value'] for h in headers if h['name'] == 'From'), 'Unknown')
+            date = next((h['value'] for h in headers if h['name'] == 'Date'), 'Unknown')
+
+            # Get snippet
+            snippet = msg.get('snippet', '')
+
+            # Check if read/unread
+            labels = msg.get('labelIds', [])
+            is_unread = 'UNREAD' in labels
+
+            email_data = {
+                'id': message['id'],
+                'subject': subject,
+                'sender': sender_header,
+                'date': date,
+                'snippet': snippet,
+                'is_unread': is_unread
+            }
+
+            emails.append(email_data)
+        return emails
+
+    except Exception as e:
+        return f"Error reading email: {str(e)}"
+
+
+#def check_urgency(body: str = None):
+    #We need to either finetune an llm for classifying the email or use an llm with zero-shot/few-shot prompting
+    #the work will be postponed at the moment here to make further advancements with the project
+    #the agent can actually do this job for the moment thanks to the memory
+
+
+
